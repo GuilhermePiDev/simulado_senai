@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciamento de Contas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-5">
+    <h2>Gerenciamento de Contas</h2>
+    <div id="contasList" class="row"></div>
+    <a href="cadastro-conta.html" class="btn btn-primary mt-3">Cadastrar Nova Conta</a>
+  </div>
+
+  <script>
+    const usuarioId = localStorage.getItem('usuarioId'); // Pega o ID do usuário logado
+
+function carregarContas() {
+  fetch(`http://localhost:8080/usuarios/${usuarioId}/contas`) 
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Erro ao buscar contas.');
+      }
+      return response.json();
+    })
+    .then(data => {
+      const contasList = document.getElementById('contasList');
+      contasList.innerHTML = ''; // Limpa a lista atual
+
+      data.forEach(conta => {
+        const card = document.createElement('div');
+        card.className = 'col-md-4 mb-3';
+        card.innerHTML = `
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">${conta.nomeConta}</h5>
+              <p class="card-text">Valor: R$ ${conta.valor}</p>
+              <p class="card-text">Data de Vencimento: ${new Date(conta.dataVencimento).toLocaleDateString()}</p>
+              <p class="card-text">Status: <span class="${conta.status === 'paga' ? 'text-success' : 'text-danger'}">${conta.status}</span></p>
+              <button class="btn btn-danger" onclick="deletarConta(${conta.id})">Deletar</button>
+              <button class="btn btn-warning" onclick="atualizarStatus(${conta.id}, '${conta.status === 'paga' ? 'pendente' : 'paga'}')">
+                Marcar como ${conta.status === 'paga' ? 'Pendente' : 'Paga'}
+              </button>
+            </div>
+          </div>
+        `;
+        contasList.appendChild(card);
+      });
+    })
+    .catch(error => {
+      console.error(error);
+      alert('Erro ao carregar contas.');
+    });
+    }
+
+    function deletarConta(contaId) {
+      fetch(`http://localhost:8080/usuarios/${usuarioId}/contas/${contaId}`, {
+        method: 'DELETE',
+      }).then(response => {
+        if (response.ok) {
+          alert('Conta deletada com sucesso!');
+          carregarContas(); // Recarrega as contas
+        } else {
+          alert('Erro ao deletar a conta.');
+        }
+      });
+    }
+
+    function atualizarStatus(contaId, novoStatus) {
+      fetch(`http://localhost:8080/usuarios/${usuarioId}/contas/${contaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: novoStatus })
+      }).then(response => {
+        if (response.ok) {
+          alert('Status da conta atualizado!');
+          carregarContas(); // Recarrega as contas
+        } else {
+          alert('Erro ao atualizar o status da conta.');
+        }
+      });
+    }
+
+    // Carregar as contas ao abrir a página
+    carregarContas();
+  </script>
+</body>
+</html>
