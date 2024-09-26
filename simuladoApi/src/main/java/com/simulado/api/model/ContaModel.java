@@ -2,6 +2,9 @@ package com.simulado.api.model;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -26,9 +29,11 @@ public class ContaModel {
     private LocalDate dataCadastro = LocalDate.now(); 
 
     @Column(nullable = false)
-    private Boolean status; 
+    private String status; 
 
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
+    @JsonBackReference
+   
     private UsuarioModel usuario;
 }
